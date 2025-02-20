@@ -3,10 +3,8 @@ import pandas as pd
 import os
 from io import BytesIO
 
-# Page configuration
 st.set_page_config(page_title="Data Sweeper", layout='wide')
 
-# Sidebar for user input and file upload
 st.sidebar.title("User Input")
 user_name = st.sidebar.text_input("Enter Your Name")
 
@@ -19,7 +17,6 @@ uploaded_files = st.sidebar.file_uploader(
 if user_name:
     st.sidebar.success(f"Welcome, {user_name}!")
 
-# Main Page Title
 st.title("Data Sweeper")
 st.write("Transform your files between CSV and Excel formats with built-in data cleaning and visualization.")
 
@@ -28,25 +25,26 @@ if uploaded_files:
 
     for file in uploaded_files:
         file_ext = os.path.splitext(file.name)[-1].lower()
-        
-        # Read file
+
+        # Read file with better handling
         if file_ext == ".csv":
             df = pd.read_csv(file)
         elif file_ext == ".xlsx":
-            df = pd.read_excel(file)
+            df = pd.read_excel(BytesIO(file.getvalue()), engine="openpyxl")  # Improved Handling
         else:
             st.error(f"Unsupported file type: {file_ext}")
             continue
 
-        # File info
+        if df.empty:
+            st.warning(f"{file.name} is empty! Please upload a valid file.")
+            continue
+
         st.write(f"**File Name:** {file.name}")
         st.write(f"**File Size:** {file.size / 1024:.2f} KB")
 
-        # Show preview
         st.write("Preview:")
         st.dataframe(df, height=300)
 
-        # Data Cleaning Options
         st.subheader(f"Data Cleaning for {file.name}")
         if st.checkbox(f"Clean Data for {file.name}"):
             col1, col2 = st.columns(2)
@@ -62,25 +60,24 @@ if uploaded_files:
                     df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
                     st.write("Missing Values Filled ✅")
 
-        # Column Selection
         st.subheader(f"Select Columns for {file.name}")
 
-        if not df.empty and not df.columns.empty:
-          selected_columns = st.multiselect(
-        f"Choose Columns", df.columns.tolist(), default=df.columns.tolist()
-      )
-        df = df[selected_columns]
-    else:
-        st.warning(f"The uploaded file {file.name} has no columns or is empty. Please check the file.")
+        if not df.columns.empty:
+            selected_columns = st.multiselect(
+                f"Choose Columns", df.columns.tolist(), default=df.columns.tolist()
+            )
+            df = df[selected_columns]
+        else:
+            st.warning(f"The uploaded file {file.name} has no columns or is empty.")
 
-        # Data Visualization
         st.subheader(f"Visualization for {file.name}")
         if st.checkbox(f"Show Bar Chart for {file.name}"):
             st.bar_chart(df.select_dtypes(include='number').iloc[:, :2])
 
-        # File Conversion
         st.subheader(f"Convert {file.name}")
-        conversion_type = st.radio(f"Convert {file.name} to:", ["CSV", "Excel"], key=file.name)
+        conversion_type = st.radio(
+            f"Convert {file.name} to:", ["CSV", "Excel"], key=f"{file.name}_{user_name}"
+        )
 
         if st.button(f"Convert {file.name}"):
             buffer = BytesIO()
@@ -95,7 +92,6 @@ if uploaded_files:
 
             buffer.seek(0)
 
-            # Download Button
             st.download_button(
                 label=f"Download {file.name} as {conversion_type}",
                 data=buffer,

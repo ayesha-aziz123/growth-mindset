@@ -1,0 +1,55 @@
+[
+    {
+        "label": "streamlit",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "streamlit",
+        "description": "streamlit",
+        "detail": "streamlit",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "BytesIO",
+        "importPath": "io",
+        "description": "io",
+        "isExtraImport": true,
+        "detail": "io",
+        "documentation": {}
+    },
+    {
+        "label": "user_name",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "user_name = st.sidebar.text_input(\"Enter Your Name\")\nuploaded_files = st.sidebar.file_uploader(\n    \"Upload your files (CSV or Excel):\", \n    type=[\"csv\", \"xlsx\"], \n    accept_multiple_files=True\n)\nif user_name:\n    st.sidebar.success(f\"Welcome, {user_name}!\")\nst.title(\"Data Sweeper\")\nst.write(\"Transform your files between CSV and Excel formats with built-in data cleaning and visualization.\")",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "uploaded_files",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "uploaded_files = st.sidebar.file_uploader(\n    \"Upload your files (CSV or Excel):\", \n    type=[\"csv\", \"xlsx\"], \n    accept_multiple_files=True\n)\nif user_name:\n    st.sidebar.success(f\"Welcome, {user_name}!\")\nst.title(\"Data Sweeper\")\nst.write(\"Transform your files between CSV and Excel formats with built-in data cleaning and visualization.\")\nif uploaded_files:",
+        "detail": "app",
+        "documentation": {}
+    }
+]
