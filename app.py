@@ -1,10 +1,12 @@
 import os
 import streamlit as st
 import pandas as pd
+# from dotenv import load_dotenv
 import google.generativeai as gen_ai
 from io import BytesIO
 
-
+# Load environment variables
+# load_dotenv()
 
 # Configure Streamlit page settings
 st.set_page_config(
@@ -20,9 +22,10 @@ st.title ("Data Sweeper")
 st.write("Transform your files between CSV and Excel formats with built-in data cleaning and visualization.")
 
 
-# # Google Gemini-Pro API Key
+# Google Gemini-Pro API Key
 # GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+
 
 # Configure AI Model
 gen_ai.configure(api_key=GOOGLE_API_KEY)
