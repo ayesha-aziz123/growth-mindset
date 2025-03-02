@@ -1,7 +1,6 @@
 import os
 import streamlit as st
 import pandas as pd
-from dotenv import load_dotenv
 import google.generativeai as gen_ai
 from io import BytesIO
 
