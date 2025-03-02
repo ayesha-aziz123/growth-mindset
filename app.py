@@ -1,36 +1,68 @@
+import os
 import streamlit as st
 import pandas as pd
-import os
+from dotenv import load_dotenv
+import google.generativeai as gen_ai
 from io import BytesIO
 
-st.set_page_config(page_title="Data Sweeper", layout='wide')
 
+
+# Configure Streamlit page settings
+st.set_page_config(
+    page_title="Data Sweeper with AI Chatbot",
+    page_icon="🤖",
+    layout="wide",
+)
+
+
+
+
+st.title ("Data Sweeper")
+st.write("Transform your files between CSV and Excel formats with built-in data cleaning and visualization.")
+
+
+# # Google Gemini-Pro API Key
+# GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+
+# Configure AI Model
+gen_ai.configure(api_key=GOOGLE_API_KEY)
+model = gen_ai.GenerativeModel('gemini-2.0-flash')
+
+# Initialize Chat Session
+if "chat_session" not in st.session_state:
+    st.session_state.chat_session = model.start_chat(history=[])
+
+# Sidebar User Input
 st.sidebar.title("User Input")
 user_name = st.sidebar.text_input("Enter Your Name")
 
 uploaded_files = st.sidebar.file_uploader(
-    "Upload your files (CSV or Excel):", 
-    type=["csv", "xlsx"], 
+    "Upload your files (CSV or Excel):",
+    type=["csv", "xlsx"],
     accept_multiple_files=True
 )
+
+# Chatbot Toggle Button
+if "show_chatbot" not in st.session_state:
+    st.session_state.show_chatbot = False  # Default: Chatbot hidden
+
+if st.sidebar.button("💬 Open Chatbot"):
+    st.session_state.show_chatbot = not st.session_state.show_chatbot  # Toggle Chatbot
 
 if user_name:
     st.sidebar.success(f"Welcome, {user_name}!")
 
-st.title("Data Sweeper")
-st.write("Transform your files between CSV and Excel formats with built-in data cleaning and visualization.")
-
+# File Processing Section
 if uploaded_files:
     st.subheader(f"Uploaded Files by {user_name}")
-
     for file in uploaded_files:
         file_ext = os.path.splitext(file.name)[-1].lower()
 
-        # Read file with better handling
         if file_ext == ".csv":
             df = pd.read_csv(file)
         elif file_ext == ".xlsx":
-            df = pd.read_excel(BytesIO(file.getvalue()), engine="openpyxl")  # Improved Handling
+            df = pd.read_excel(BytesIO(file.getvalue()), engine="openpyxl")
         else:
             st.error(f"Unsupported file type: {file_ext}")
             continue
@@ -48,7 +80,6 @@ if uploaded_files:
         st.subheader(f"Data Cleaning for {file.name}")
         if st.checkbox(f"Clean Data for {file.name}"):
             col1, col2 = st.columns(2)
-
             with col1:
                 if st.button(f"Remove Duplicates from {file.name}"):
                     df.drop_duplicates(inplace=True)
@@ -61,14 +92,11 @@ if uploaded_files:
                     st.write("Missing Values Filled ✅")
 
         st.subheader(f"Select Columns for {file.name}")
-
         if not df.columns.empty:
             selected_columns = st.multiselect(
                 f"Choose Columns", df.columns.tolist(), default=df.columns.tolist()
             )
             df = df[selected_columns]
-        else:
-            st.warning(f"The uploaded file {file.name} has no columns or is empty.")
 
         st.subheader(f"Visualization for {file.name}")
         if st.checkbox(f"Show Bar Chart for {file.name}"):
@@ -91,7 +119,6 @@ if uploaded_files:
                 mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
             buffer.seek(0)
-
             st.download_button(
                 label=f"Download {file.name} as {conversion_type}",
                 data=buffer,
@@ -99,4 +126,25 @@ if uploaded_files:
                 mime=mime_type
             )
 
-st.success("All files have been processed successfully! 🚀")
+            # 🎈 Show balloons after file conversion
+            st.balloons()
+            
+            
+
+# ✅ Chatbot Section (Only Show if Sidebar Button Clicked)
+if st.session_state.show_chatbot:
+    st.markdown("<h2 style='text-align: center;'>🤖 Chat with Gemini-Pro</h2>", unsafe_allow_html=True)
+
+    # Display Chat History
+    for message in st.session_state.chat_session.history:
+        with st.chat_message("assistant" if message.role == "model" else "user"):
+            st.markdown(message.parts[0].text)
+
+    # Chat Input
+    user_prompt = st.chat_input("Ask Gemini-Pro...")
+    if user_prompt:
+        st.chat_message("user").markdown(user_prompt)
+        gemini_response = st.session_state.chat_session.send_message(user_prompt)
+
+        with st.chat_message("assistant"):
+            st.markdown(gemini_response.text)
